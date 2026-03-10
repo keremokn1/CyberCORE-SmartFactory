@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha CORE | Fabrika Kontrol Merkezi</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --secondary: #3a7bd5;
+            --bg: #05070a;
+            --surface: #0f172a;
+            --text: #f8fafc;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            background-image: linear-gradient(rgba(0, 210, 255, 0.03) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(0, 210, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* --- Modern Navbar --- */
+        .navbar {
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 210, 255, 0.2);
+            position: sticky;
+            top: 0; z-index: 1000;
+        }
+
+        .logo { font-family: 'Orbitron'; font-weight: bold; font-size: 1.4rem; color: var(--primary); letter-spacing: 2px; }
+
+        .btn {
+            padding: 10px 22px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn:hover { background: var(--primary); color: var(--bg); box-shadow: 0 0 20px rgba(0, 210, 255, 0.4); }
+
+        /* --- İstatistik Grid --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+            padding: 40px 50px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--primary);
+        }
+
+        .stat-card h3 { font-family: 'Orbitron'; font-size: 2.2rem; margin: 0; }
+        .stat-card p { color: #94a3b8; font-size: 0.75rem; font-weight: bold; margin-top: 5px; }
+
+        /* --- Canlı Grafik Paneli --- */
+        .dashboard-main {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            padding: 0 50px;
+            margin-bottom: 50px;
+        }
+
+        .chart-container {
+            background: var(--surface);
+            border-radius: 30px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- Robot Kartları --- */
+        .robot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            padding: 50px;
+        }
+
+        .robot-card {
+            background: var(--surface);
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .robot-card:hover { transform: translateY(-10px); border-color: var(--primary); }
+
+        .robot-img { width: 100%; height: 200px; object-fit: cover; border-radius: 28px 28px 0 0; opacity: 0.8; }
+
+        .status-indicator {
+            position: absolute; top: 20px; right: 20px;
+            padding: 6px 15px; border-radius: 50px; font-size: 0.7rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .active-glow { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .error-glow { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .maint-glow { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">ALPHA_CORE <span style="font-weight: 300; opacity: 0.6;">v3.0</span></div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <a href="{% url 'pdf_rapor' %}" class="btn">SİSTEM RAPORU (.PDF)</a>
+            <a href="/admin" class="btn" style="background: var(--primary); color: var(--bg);">YÖNETİM</a>
+            {% if user.is_authenticated %}
+                <a href="/admin/logout/" style="color: var(--danger); font-size: 0.8rem; font-weight: bold; text-decoration: none;">GÜVENLİ ÇIKIŞ</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="stats-grid">
+        <div class="stat-card" data-aos="fade-up">
+            <p>TOPLAM ÜNİTE</p>
+            <h3>{{ toplam }}</h3>
+        </div>
+        <div class="stat-card" data-aos="fade-up" data-aos-delay="100" style="border-color: var(--success);">
+            <p>OPERASYONEL</p>
+            <h3 style="color: var(--success);">{{ calisan }}</h3>
+        </div>
+        <div class="stat-card" data-aos="fade-up" data-aos-delay="200" style="border-color: var(--danger);">
+            <p>SİSTEM HATASI</p>
+            <h3 style="color: var(--danger);">{{ arizali }}</h3>
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: center; padding: 0 50px;">
+        <div class="chart-container" data-aos="zoom-in">
+            <h4 style="font-family: 'Orbitron'; margin-bottom: 30px; letter-spacing: 2px;">HATTIN GENEL SAĞLIK DURUMU</h4>
+            <canvas id="healthChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+
+    <div class="robot-grid">
+        {% for r in robotlar %}
+        <div class="robot-card" data-aos="fade-up">
+            <div class="status-indicator {% if r.durum == 'calisiyor' %}active-glow{% elif r.durum == 'ariza' %}error-glow{% else %}maint-glow{% endif %}">
+                {{ r.get_durum_display }}
+            </div>
+            {% if r.resim %}
+                <img src="{{ r.resim.url }}" class="robot-img">
+            {% else %}
+                <div style="height: 200px; background: #1e293b; border-radius: 28px 28px 0 0;"></div>
+            {% endif %}
+            <div style="padding: 25px;">
+                <h4 style="margin: 0; font-family: 'Orbitron'; font-size: 1.1rem; color: var(--primary);">{{ r.isim }}</h4>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin: 10px 0;">Donanım: <strong>{{ r.model }}</strong></p>
+                {% if r.ariza_notu %}
+                <div style="margin-top: 15px; padding: 12px; background: rgba(239,68,68,0.05); border-radius: 12px; border-left: 2px solid var(--danger); font-size: 0.75rem; color: var(--danger);">
+                    SİSTEM MESAJI: {{ r.ariza_notu }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: false });
+
+        // Chart.js Verileri
+        const ctx = document.getElementById('healthChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Çalışıyor', 'Arıza', 'Bakım'],
+                datasets: [{
+                    data: [Number("{{ calisan }}"), Number("{{ arizali }}"), Number("{{ bakimda }}")],
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                    borderWidth: 0,
+                    hoverOffset: 25
+                }]
+            },
+            options: {
+                cutout: '82%',
+                plugins: {
+                    legend: { labels: { color: '#94a3b8', font: { family: 'Orbitron', size: 10 } } }
+                }
+            }
+        });
+
+        // Canlı simülasyonu yakalamak için otomatik tazeleme (10 saniye)
+        setTimeout(() => { location.reload(); }, 10000);
+    </script>
+</body>
+</html>

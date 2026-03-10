@@ -1,0 +1,8 @@
+from django.apps import AppConfig
+
+class UretimConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'uretim'
+
+    def ready(self):
+        import uretim.signals 
